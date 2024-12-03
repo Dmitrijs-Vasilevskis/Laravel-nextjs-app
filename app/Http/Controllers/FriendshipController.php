@@ -6,7 +6,7 @@ use App\Models\DirectMessage;
 use Illuminate\Http\Request;
 use App\Models\Friendship;
 use Illuminate\Support\Facades\Log;
-
+use App\Events\Friendship\FriendshipRequestEvent;
 
 class FriendshipController extends Controller
 {
@@ -41,10 +41,12 @@ class FriendshipController extends Controller
         // Check if a friendship or request already exists
         $existingRequest = Friendship::where(function ($query) use ($senderId, $receiverId) {
             $query->where('sender_id', $senderId)
-                ->where('receiver_id', $receiverId);
+            ->where('receiver_id', $receiverId)
+                ->whereIn('status', ['pending', 'accepted']);
         })->orWhere(function ($query) use ($senderId, $receiverId) {
             $query->where('sender_id', $receiverId)
-                ->where('receiver_id', $senderId);
+                ->where('receiver_id', $senderId)
+                ->whereIn('status', ['pending', 'accepted']);
         })->first();
 
         if ($existingRequest) {
@@ -62,6 +64,12 @@ class FriendshipController extends Controller
             'status' => 'pending',
         ]);
 
+        broadcast(new FriendshipRequestEvent(
+            $receiverId,
+            $friendship->status,
+            sprintf('You have a new friend request.')
+        ))->toOthers();
+
         return response()->json([
             'message' => 'Friend request sent successfully.',
             'friendship' => $friendship
@@ -76,20 +84,34 @@ class FriendshipController extends Controller
      */
     public function acceptFriendRequest(Request $request)
     {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
+        $request->validate(['sender_id' => 'required|exists:users,id',
         ]);
 
         $receiverId = $this->user->id;
 
-        $friendship = Friendship::where('sender_id', $request->receiver_id)
-            ->where('receiver_id', $receiverId)
-            ->where('status', 'pending')
-            ->update(['status' => 'accepted']);
+        Friendship::where('sender_id', $request->sender_id)
+        ->where('receiver_id', $receiverId)
+        ->where('status', 'pending')
+        ->update(['status' => 'accepted']);
 
-        Log::debug($friendship);
+        // Fetch the updated friendship record
+        $friendship = Friendship::where('sender_id', $request->sender_id)
+        ->where('receiver_id', $receiverId)
+        ->with('sender')
+        ->first();
 
-        return response()->json($friendship);
+        Log::debug($request->sender_id);
+
+        broadcast(new FriendshipRequestEvent(
+            $request->sender_id,
+            $friendship->status,
+            sprintf('%s accepted your friend request.', $friendship->sender->name)
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Friend request accepted successfully.',
+            'data' => $friendship
+        ]);
     }
 
     /**
@@ -100,35 +122,55 @@ class FriendshipController extends Controller
      */
     public function declineFriendRequest(Request $request)
     {
-        $request->validate([
-            'receiver_id' => 'required|exists:users,id',
+        $request->validate(['sender_id' => 'required|exists:users,id',
         ]);
 
         $receiverId = $this->user->id;
 
-        $friendship = Friendship::where('sender_id', $request->receiver_id)
+        $friendship = Friendship::where('sender_id', $request->sender_id)
             ->where('receiver_id', $receiverId)
             ->where('status', 'pending')
             ->update(['status' => 'declined']);
 
-        return response()->json($friendship);
+        $friendship = Friendship::where('sender_id', $request->sender_id)
+        ->where('receiver_id', $receiverId)
+        ->with('sender', 'receiver')
+        ->first();
+
+        broadcast(new FriendshipRequestEvent(
+            $request->sender_id,
+            $friendship->status,
+            sprintf('%s declined your friend request.', $friendship->receiver->name)
+        ))->toOthers();
+
+        return response()->json([
+            'message' => 'Friend request declined successfully.',
+            'data' => $friendship
+        ]);
     }
 
     public function removeFriend(Request $request)
     {
-        $userId = $this->user->id;
-
         $request->validate([
-            'receiver_id' => 'required|exists:users,id',
+            'friend_id' => 'required|exists:users,id',
         ]);
 
-        $friendship = Friendship::where(function ($query) use ($userId, $request) {
-            $query->where('sender_id', $userId)->where('receiver_id', $request->receiver_id);
-        })->orWhere(function ($query) use ($userId, $request) {
-            $query->where('sender_id', $request->receiver_id)->where('receiver_id', $userId);
-        })->delete();
+        $userId = $this->user->id;
+        $friendId = $request->friend_id;
 
-        return response()->json($friendship);
+        $friendship = Friendship::where(function ($query) use ($userId, $friendId) {
+            $query->where('sender_id', $userId)->where('receiver_id', $friendId);
+        })->orWhere(function ($query) use ($userId, $friendId) {
+            $query->where('sender_id', $friendId)->where('receiver_id', $userId);
+        })->first();
+
+        if (!$friendship) {
+            return response()->json(['message' => 'Friend not found'], 404);
+        }
+
+        $friendship->delete();
+
+        return response()->json(['message' => 'Friend deleted successfully'], 200);
     }
 
     /**
@@ -171,35 +213,42 @@ class FriendshipController extends Controller
             ->with(['sender', 'receiver'])
             ->get()
             ->map(function ($friendship) use ($userId) {
-                // Determine the friend user data depending on the relationship
-                $friend = $friendship->sender_id === $userId ? $friendship->friend : $friendship->user;
+            // Determine the friend based on the user being the sender or receiver
+            $friend = $friendship->sender_id === $userId ? $friendship->receiver : $friendship->sender;
 
-                Log::debug($friend);
-                // Fetch the latest message and count of unread messages
-                $latestMessage = DirectMessage::where(function ($query) use ($userId, $friend) {
-                    $query->where('sender_id', $userId)->where('receiver_id', $friend->id)
-                        ->orWhere('sender_id', $friend->id)->where('receiver_id', $userId);
-                })
-                    ->orderBy('created_at', 'desc')
-                    ->first();
+            // Fetch the latest message between the user and the friend
+            $latestMessage = DirectMessage::where(function ($query) use ($userId, $friend) {
+                $query->where('sender_id', $userId)->where('receiver_id', $friend->id)
+                    ->orWhere('sender_id', $friend->id)->where('receiver_id', $userId);
+            })
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-                $unreadCount = DirectMessage::where('receiver_id', $userId)
-                    ->where('sender_id', $friend->id)
-                    ->where('is_read', false)
-                    ->count();
+            // Count unread messages from the friend to the user
+            $unreadCount = DirectMessage::where('receiver_id', $userId)
+            ->where('sender_id', $friend->id)
+            ->where('is_read', false)
+            ->count();
 
-                return [
-                    'data' => $friend,
-                    'chatPreview' => [
-                        'latestMessage' => $latestMessage ? $latestMessage->message : null,
-                        'sentTime' => $latestMessage ? $latestMessage->created_at : null,
-                        'unread' => $unreadCount
-                    ]
+            return [
+                'data' => [
+                    'id' => $friend->id,
+                    'name' => $friend->name,
+                    'email' => $friend->email,
+                    'profile_picture_url' => $friend->profile_picture_url,
+                    'chat_name_color' => $friend->chat_name_color,
+                ],
+                'chatPreview' => [
+                    'latestMessage' => $latestMessage ? $latestMessage->message : null,
+                    'sentTime' => $latestMessage ? $latestMessage->created_at->toDateTimeString() : null,
+                    'unread' => $unreadCount,
+                ],
                 ];
             });
 
         return response()->json(['friendList' => $friendList], 200);
     }
+
 
     /**
      * Fetches the pending friend requests for the authenticated user.
@@ -210,7 +259,7 @@ class FriendshipController extends Controller
     {
         $pendingRequests = Friendship::where('receiver_id', $this->user->id)
             ->where('status', 'pending')
-            ->with('user')
+            ->with('sender')
             ->get();
 
         return response()->json($pendingRequests);
