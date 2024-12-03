@@ -5,6 +5,8 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --color-btn-primary: #5c16c5;
+  --color-btn-secondaty: #53535f61;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -28,12 +30,20 @@ iframe {
   max-width: 860px;
 }
 
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .player-container {
   position: relative;
 }
 
 /* Main container styles */
 .main-container {
+
+  flex-grow: 1;
   /* Center the content with auto margin */
   margin: 0 auto;
 
@@ -42,7 +52,7 @@ iframe {
 
   /* Responsive max width */
   max-width: 1280px;
-
+  
   /* Flex layout for potential child components */
   display: flex;
   flex-direction: row;
@@ -81,6 +91,7 @@ iframe {
 
 @media (min-width: 1280px) {
   .main-container {
+    width: 100%;
     padding: 2rem;
     margin: 0 auto;
   }
@@ -89,8 +100,9 @@ iframe {
 /* Media query for large screens */
 @media (min-width: 1024px) and (max-width: 1279px) {
   .main-container {
+    width: auto;
     padding: 2rem;
-    margin: 0 2rem;
+    margin: 0 1rem;
   }
 }
 
