@@ -20,6 +20,9 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_picture',
+        'profile_picture_url',
+        'nickname_color',
     ];
 
     /**
@@ -43,5 +46,27 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function friends()
+    {
+        return $this->hasMany(Friendship::class, 'user_id')
+        ->where('status', 'accepted');
+    }
+
+    public function friendRequests()
+    {
+        return $this->hasMany(Friendship::class, 'user_id')
+        ->where('status', 'pending');
+    }
+
+    public function sentDirectMessage()
+    {
+        return $this->hasMany(DirectMessage::class, 'sender_id');
+    }
+
+    public function receivedDirectMessages()
+    {
+        return $this->hasMany(DirectMessage::class, 'receiver_id');
     }
 }
