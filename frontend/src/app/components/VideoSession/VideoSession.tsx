@@ -8,111 +8,118 @@ import { useAuth } from "@/app/hooks/auth";
 import getVideoId from "get-video-id";
 import { useRouter } from "next/navigation";
 import styled from "styled-components";
+import { useGlobalState } from "@/app/context/globalProvider";
+import {
+    initVideoSession,
+    joinVideoSession,
+} from "@/services/api/videoSession";
 
 export default function VideoSession() {
-  const [videoUrl, setVideoUrl] = useState("");
-  const [sessionId, setSessionId] = useState("");
-  const { user } = useAuth();
-  const router = useRouter();
+    const [videoUrl, setVideoUrl] = useState<string>("");
+    const [sessionId, setSessionId] = useState<string>("");
+    const { user } = useGlobalState();
+    const router = useRouter();
 
+    const handleCreateSession = async (e: any) => {
+        e.preventDefault();
 
-  const handleCreateSession = (e: any) => {
-    e.preventDefault();
+        const { id, service } = getVideoId(videoUrl);
 
-    const { id, service } = getVideoId(videoUrl);
-
-    if (service !== "youtube") {
-      toast.error("Only youtube videos are allowed");
-      return;
-    }
-
-    if (!id) {
-      toast.error("Video Url is required");
-      return;
-    }
-
-    axios
-      .post("/api/init-video-session", {
-        host_id: user?.id,
-        video_id: id,
-      })
-      .then((response) => {
-        if (response) {
-          const { token, session_id } = response.data;
-          router.push(`watch/${token}?sessionId=${session_id}`);
+        if (service !== "youtube") {
+            toast.error("Only youtube videos are allowed");
+            return;
         }
-      })
-      .catch((error) => {
-        toast.error(error.response.data.message);
-      });
-  };
 
-  const handleExsistingSession = (e: any) => {
-    e.preventDefault();
-
-    if (!sessionId) {
-      toast.error("Session Id is required");
-      return;
-    }
-
-    axios
-      .post("/api/join-video-session", {
-        session_id: sessionId,
-      })
-      .then((response) => {
-        if (response) {
-          router.push(`watch/${response.data.token}?sessionId=${sessionId}`);
+        if (!id) {
+            toast.error("Video Url is required");
+            return;
         }
-      })
-      .catch((error) => {
-        toast.error(error.response.data.message);
-      });
-  };
 
-  return (
-    <VideoSessionStyled className="container">
-      <div className="container">
-        <div className="action">
-          <div className="action-header">
-            <h3>Create a video session</h3>
-          </div>
-          <div className="action-content">
-            <Input
-              label="Video URL"
-              className="action-input"
-              placeholder="Youtube Video Link"
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              id="video-url"
-              type="text"
-              crossOrigin={"anonymous"}
-              minLength={5}
-            />
-            <button className="btn-primary" onClick={handleCreateSession}>Start</button>
-          </div>
-        </div>
-        <div className="action">
-          <div className="action-header">
-            <h3>Or join existing with an ID</h3>
-          </div>
-          <div className="action-content">
-            <Input
-              label="Session ID"
-              className="action-input"
-              placeholder="Enter Session ID"
-              value={sessionId}
-              onChange={(e) => setSessionId(e.target.value)}
-              id="session-id"
-              type="text"
-              crossOrigin={"anonymous"}
-              minLength={5}
-            />
-            <button className="btn-primary" onClick={handleExsistingSession}>Join</button>
-          </div>
-        </div>
-      </div>
-    </VideoSessionStyled>
-  );
+        try {
+            const { token, session_id } = await initVideoSession({
+                host_id: user?.id,
+                video_id: id,
+            });
+
+            router.push(`watch/${token}?sessionId=${session_id}`);
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+    const handleJoinSession = async (e: any) => {
+        e.preventDefault();
+
+        if (!sessionId) {
+            toast.error("Session Id is required");
+            return;
+        }
+
+        try {
+            const { token } = await joinVideoSession({
+                session_id: sessionId,
+            });
+
+            router.push(`watch/${token}?sessionId=${sessionId}`);
+        } catch (error: any) {
+            toast.error(error.message);
+        }
+    };
+
+    return (
+        <VideoSessionStyled className="container">
+            <div className="container">
+                <div className="action">
+                    <div className="action-header">
+                        <h3>Create a video session</h3>
+                    </div>
+                    <div className="action-content">
+                        <Input
+                            label="Video URL"
+                            className="action-input"
+                            placeholder="Youtube Video Link"
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                            id="video-url"
+                            type="text"
+                            crossOrigin={"anonymous"}
+                            minLength={5}
+                        />
+                        <button
+                            className="btn-primary"
+                            onClick={handleCreateSession}
+                        >
+                            Start
+                        </button>
+                    </div>
+                </div>
+                <div className="action">
+                    <div className="action-header">
+                        <h3>Or join existing with an ID</h3>
+                    </div>
+                    <div className="action-content">
+                        <Input
+                            label="Session ID"
+                            className="action-input"
+                            placeholder="Enter Session ID"
+                            value={sessionId}
+                            onChange={(e) => setSessionId(e.target.value)}
+                            id="session-id"
+                            type="text"
+                            crossOrigin={"anonymous"}
+                            minLength={5}
+                        />
+                        <button
+                            className="btn-primary"
+                            onClick={handleJoinSession}
+                        >
+                            Join
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </VideoSessionStyled>
+    );
 }
 
 const VideoSessionStyled = styled.div`
