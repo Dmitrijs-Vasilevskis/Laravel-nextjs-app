@@ -2,6 +2,14 @@
 
 return [
 
+    // 'providers' => [
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\Broadcasting\BroadcastServiceProvider::class,
+        Illuminate\Cache\CacheServiceProvider::class,
+        Illuminate\Filesystem\FilesystemServiceProvider::class,
+        Illuminate\Foundation\Providers\ConsoleSupportServiceProvider::class,
+    // ],
+
     /*
     |--------------------------------------------------------------------------
     | Application Name
@@ -53,6 +61,8 @@ return [
     */
 
     'url' => env('APP_URL', 'http://localhost'),
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
 
     /*
     |--------------------------------------------------------------------------
