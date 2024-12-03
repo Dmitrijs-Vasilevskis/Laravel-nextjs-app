@@ -12,9 +12,10 @@ import {
 } from "@material-tailwind/react";
 import { user as userIcon } from "@/app/utils/icons";
 import { useRouter } from "next/navigation";
+import { UserInterface } from "@/types/User/User";
 
 interface Props {
-  user: any;
+  user: UserInterface;
 }
 export default function UserProfile({ user }: Props) {
   const router = useRouter();
