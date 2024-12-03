@@ -1,311 +1,187 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useAuth } from "@/app/hooks/auth";
 import { Input, Button, Typography } from "@material-tailwind/react";
 import styled from "styled-components";
-import NicknameColorInput from "../components/ColorPicker/ColorPicker";
-import Image from "next/image";
-import { image, paletteIcon } from "@/app/utils/icons";
-import { axios } from "../lib/axios";
-import toast from "react-hot-toast";
+import { useSearchParams } from "next/navigation";
+import MyProfile from "../components/MyAccount/Tabs/Profile/MyProfile";
+import MySessions from "../components/MyAccount/Tabs/Sessions/MySessions";
+import { useAuth } from "../hooks/auth";
+import Link from "next/link";
+import MyFriends from "../components/MyAccount/Tabs/Friends/MyFriends";
 
 export default function page() {
-  const { user } = useAuth({
-    middleware: "auth",
-    redirectIfAuthenticated: "/",
-  });
+    const { user } = useAuth({
+        middleware: "auth",
+        redirectIfAuthenticated: "/",
+    });
 
-  const [formdata, setFormData] = useState({
-    username: user?.username || "",
-    email: user?.email || "",
-    password: "",
-    confirmPassword: "",
-    profilePicture: user?.profile_picture || null,
-    nicknameColor: user?.chat_name_color,
-  });
+    const searchParams = useSearchParams();
+    const [activeTab, setActiveTab] = useState<string>("profile");
 
-  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
-  const [color, setColor] = useState("");
-  const isValidHex = (color: string) => /^#([A-Fa-f0-9]{3}){1,2}$/.test(color);
-
-  const handleOpenColorPicker = () => {
-    setIsColorPickerOpen(!isColorPickerOpen);
-  };
-
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-
-  const handlechange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, files } = e.target;
-
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: files ? files[0] : value,
-    }));
-
-    if (name === "profilePicture" && files && files[0]) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-
-      reader.readAsDataURL(files[0]);
-    }
-  };
-
-  const handleUpdateProfilePicture = () => {
-    if (!formdata.profilePicture) return toast.error("Please select an image");
-
-    axios
-      .post(
-        "api/user-update-profile-image",
-        {
-          id: user?.id,
-          profile_picture: formdata.profilePicture,
-        },
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      )
-      .then((res) => {
-        console.log(">> response", res);
-      });
-  };
-
-  const handleUpdateNicknameColor = () => {
-    if (!color) return toast.error("Please select a color");
-
-    if (!isValidHex(color)) return toast.error("Invalid HEX color");
-
-    axios
-      .post("api/user-update-profile", {
-        id: user?.id,
-        nicknameColor: color,
-      })
-      .then((res) => {
-        if (res.status === 200) {
-          toast.success("Nickname color updated successfully");
-          handleOpenColorPicker();
-        }
-      });
-  };
-
-  const handleColorChange = (color: string) => {
-    setColor(color);
-  };
-
-  const getTextColorStyle = () => {
-    return {
-      color: color ?? user.chat_name_color,
+    const handleTabSwitch = (tab: string) => {
+        setActiveTab(tab);
     };
-  };
 
-  useEffect(() => {
-    if (user) {
-      const { chat_name_color, profile_picture_url } = user;
+    const isTabActive = (tab: string) => {
+        return !!activeTab.includes(tab);
+    };
 
-      setImagePreview(profile_picture_url);
-      setColor(chat_name_color);
-    }
-  }, [user]);
+    const handleRenderTab = () => {
+        switch (activeTab) {
+            case "profile":
+                return <MyProfile />;
+            case "sessions":
+                return <MySessions />;
+            case "friends":
+                return <MyFriends />;
+            default:
+                return <MyProfile />;
+        }
+    };
 
-  return (
-    <MyAccountStyled className="main-container">
-      {user && (
-        <div className="main-wrapper">
-          {/* Profile Picture section*/}
-          <div className="section-tab ">
-            <div className="section-header">
-              <Typography variant="h3">Profile Picture</Typography>
-            </div>
-            <div className="section-item-container">
-              <div className="image-preview-container">
-                {imagePreview ? (
-                  <img
-                    className="h-24 w-24 rounded-full object-cover object-center"
-                    src={imagePreview}
-                    alt="profile picture preview"
-                    width={100}
-                    height={100}
-                  />
-                ) : (
-                  <div className="image-preview-icon">{image}</div>
-                )}
-              </div>
-              <div className="section-item-content flex-col">
-                <div className="section-item-actions gap-2">
-                  <Input
-                    className="section-input"
-                    type="file"
-                    label="Profile picture"
-                    name="profilePicture"
-                    onChange={handlechange}
-                    crossOrigin={"anonymous"}
-                    accept="image/*"
-                  />
-                  <Button
-                    onClick={handleUpdateProfilePicture}
-                    className="btn-primary flex-shrink-0"
-                  >
-                    <span>Update Profile Picture</span>
-                  </Button>
-                </div>
-                <span className="mt-4">
-                  Must be JPEG or PNG and cannot exceed 10MB.
-                </span>
-              </div>
-            </div>
-          </div>
-          {/* user section */}
-          <div className="section-tab">
-            <div className="section-header">
-              <Typography variant="h3">Profile Settings</Typography>
-            </div>
-            <div className="section-item-container">
-              <div className="section-item-content">
-                <div className="section-item-header">
-                  <span>Email</span>
-                </div>
-                <Input
-                  className="section-input"
-                  crossOrigin={"anonymous"}
-                  defaultValue={user?.email}
-                  type="text"
-                  label="Email"
-                  name="email"
-                  readOnly
-                  disabled
-                />
-              </div>
-            </div>
-            <div className="section-item-container">
-              <div className="section-item-content">
-                <div className="section-item-header">
-                  <span>Username</span>
-                </div>
-                <Input
-                  className="section-input"
-                  crossOrigin={"anonymous"}
-                  defaultValue={user?.name}
-                  type="text"
-                  label="UserName"
-                  name="userName"
-                  readOnly
-                  disabled
-                />
-              </div>
-            </div>
+    useEffect(() => {
+        setActiveTab(searchParams.get("tab") || "profile");
+    }, [searchParams.get("tab")]);
 
-            {/*Chat setting tab */}
-            <div className="section-tab">
-              <div className="section-header">
-                <Typography variant="h3">
-                  Chat settings & customizations
-                </Typography>
-              </div>
-              <div className="section-item-container">
-                <div className="section-item-header">
-                  <span>Username color </span>
+    return (
+        <MyAccountStyled className="main-container">
+            <header className="my-account-header">
+                <div>
+                    <ul className="inline-grid grid-flow-col border-b">
+                        <li className="tab-item-container">
+                            <Link
+                                href={{
+                                    pathname: "my-account",
+                                    query: { tab: "profile" },
+                                }}
+                                className={`tab-link ${
+                                    isTabActive("profile") ? "active" : ""
+                                }`}
+                            >
+                                My Profile
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href={{
+                                    pathname: "my-account",
+                                    query: { tab: "sessions" },
+                                }}
+                                className={`tab-link ${
+                                    isTabActive("sessions") ? "active" : ""
+                                }`}
+                            >
+                                <span className="tab-text">My Sessions</span>
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href={{
+                                    pathname: "my-account",
+                                    query: { tab: "friends" },
+                                }}
+                                className={`tab-link ${
+                                    isTabActive("friends") ? "active" : ""
+                                }`}
+                            >
+                                <span className="tab-text">My Friends</span>
+                            </Link>
+                        </li>
+                    </ul>
                 </div>
-                <div className="section-item-content flex-row gap-2">
-                  <div className="flex relative grow">
-                    {isColorPickerOpen && (
-                      <NicknameColorInput
-                        handleColorChange={handleColorChange}
-                        color={color}
-                        getTextColorStyle={getTextColorStyle}
-                      />
-                    )}
-                    <Input
-                      crossOrigin={"anonymous"}
-                      defaultValue={user?.name}
-                      label="Color sample"
-                      type="text"
-                      style={getTextColorStyle()}
-                      name="userNameColor"
-                      readOnly
-                    />
-                    <button
-                      className="palette-icon"
-                      onClick={handleOpenColorPicker}
-                    >
-                      {paletteIcon}
-                    </button>
-                  </div>
-
-                  <div className="section-item-actions">
-                    <Button
-                      onClick={handleUpdateNicknameColor}
-                      className="btn-primary flex-shrink-0"
-                    >
-                      <span>Update Chat Nickname Color</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </MyAccountStyled>
-  );
+            </header>
+            {user && <div className="main-wrapper">{handleRenderTab()}</div>}
+        </MyAccountStyled>
+    );
 }
 
 const MyAccountStyled = styled.div`
-  .main-wrapper {
-    width: 100%;
-  }
-
-  .section-header {
-    margin: 1rem 0;
-  }
-  .section-item-container {
     display: flex;
-    flex-direction: row;
-    align-items: center;
-    margin-bottom: 1rem;
-  }
+    flex-direction: column;
 
-  .section-item-content {
-    margin: 0 1rem;
-    display: flex;
-    width: 100%;
-  }
+    .main-wrapper {
+        width: 100%;
+        height: 100%;
+    }
 
-  .section-item-actions {
-    display: flex;
-  }
+    .my-account-header {
+        margin: 1rem 0;
+    }
 
-  .section-input {
-    width: 100%;
-  }
+    .section-item-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
 
-  .image-preview-container {
-    min-width: 6rem;
-    align-content: center;
-  }
+    .section-item-content {
+        margin: 0 1rem;
+        display: flex;
+        width: 100%;
+    }
 
-  .image-preview-icon {
-    font-size: 63px;
-    text-align: center;
-    border: 1px solid black;
-    border-radius: 9999px;
-    // display: flex;
-    // justify-content: center;
-  }
+    .section-item-actions {
+        display: flex;
+    }
 
-  .section-item-header {
-    align-content: center;
-    width: 18rem;
-  }
+    .section-input {
+        width: 100%;
+    }
 
-  .palette-icon {
-    position: absolute;
-    height: 100%;
-    right: 0;
-    padding-right: 20px;
-  }
+    .image-preview-container {
+        min-width: 6rem;
+        align-content: center;
+    }
+
+    .image-preview-icon {
+        font-size: 63px;
+        text-align: center;
+        border: 1px solid black;
+        border-radius: 9999px;
+        // display: flex;
+        // justify-content: center;
+    }
+
+    .section-item-header {
+        align-content: center;
+        width: 18rem;
+    }
+
+    .tab-item-container {
+        padding: 2px;
+    }
+
+    .tab-text {
+        padding: 0 10px;
+    }
+
+    .active {
+        color: #bf94ff;
+    }
+
+    .tab-link {
+        position: relative;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    .tab-link:hover {
+        color: #a970ff;
+    }
+
+    .tab-link::after {
+        position: relative;
+        content: "";
+        bottom: -2px;
+        display: block;
+        width: 100%;
+        height: 0px;
+        background-color: #bf94ff;
+    }
+
+    .active::after {
+        height: 2px;
+    }
 `;
