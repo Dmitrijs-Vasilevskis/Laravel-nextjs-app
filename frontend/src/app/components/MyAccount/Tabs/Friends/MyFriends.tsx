@@ -7,7 +7,6 @@ import { axios } from "@/app/lib/axios";
 import {
     acceptFriendRequest,
     declineFriendRequest,
-    fetchFriends,
 } from "@/services/api/firendship";
 import Chatbox from "@/app/components/DirectMessages/Chatbox";
 import FriendBar from "@/app/components/DirectMessages/FriendBar";
