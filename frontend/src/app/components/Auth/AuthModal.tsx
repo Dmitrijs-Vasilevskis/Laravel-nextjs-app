@@ -1,6 +1,5 @@
 "use client";
 
-import { useGlobalState } from "@/app/context/globalProvider";
 import LoginForm from "./LoginForm";
 import RegistrationForm from "./RegistrationForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
@@ -12,7 +11,6 @@ interface Props {
 }
 
 export default function AuthModal({ handleOpenAuthModal }: Props) {
-  const { isLoggedIn, setIsLoggedIn } = useGlobalState();
   const [formType, setFormType] = useState("login");
 
   const handleFormType = (newFormType: string) => {
