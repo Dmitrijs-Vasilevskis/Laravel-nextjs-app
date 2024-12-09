@@ -10,11 +10,13 @@ use Illuminate\Support\Facades\Log;
 
 class DirectMessageController extends Controller
 {
-
+    /**
+     *  @var \App\Models\User
+     */
     protected $user;
 
     /**
-     * Get the user instance.
+     * Get the currently authenticated user.
      *
      * @param  \Illuminate\Http\Request  $request
      */

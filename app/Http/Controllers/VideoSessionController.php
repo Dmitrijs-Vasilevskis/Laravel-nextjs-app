@@ -19,18 +19,29 @@ use Illuminate\Http\Response;
 
 class VideoSessionController extends Controller
 {
-
+    /**
+     *  @var \App\Models\User
+     */
     protected $user;
 
+    /**
+     * Get the currently authenticated user.
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     */
     public function __construct(Request $request)
     {
         $this->user = $request->user();
     }
 
+    /**
+     *  Get active video session by host_id
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getActiveVideoSessions(Request $request): JsonResponse
     {
-
-        Log::debug($request);
 
         $request->validate([
             'host_id' => ['required'],
@@ -41,6 +52,12 @@ class VideoSessionController extends Controller
         return response()->json($videoSessionsCollection);
     }
 
+    /**
+     *  Create a new video session
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function initVideoSession(Request $request)
     {
 
@@ -61,6 +78,12 @@ class VideoSessionController extends Controller
         return response()->json($videoSession);
     }
 
+    /**
+     *  Delete a video session by creator request
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function deleteVideoSession(Request $request)
     {
         $request->validate([
@@ -84,6 +107,12 @@ class VideoSessionController extends Controller
             ], 200);
     }
 
+    /**
+     *  Join a video session, and broadcast join event
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function joinVideoSession(Request $request)
     {
         $request->validate([
@@ -99,6 +128,12 @@ class VideoSessionController extends Controller
         return response()->json($videoSession);
     }
 
+    /**
+     *  Broadcast sync event with the latest player state
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function getVideoSessionState(Request $request): Response
     {
         $request->validate([
@@ -111,6 +146,13 @@ class VideoSessionController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * Broadcast sync event with the latest playlist state,
+     * current video index and seconds
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function getVideoSessionPlaylistState(Request $request): Response
     {
         $request->validate([
@@ -124,6 +166,12 @@ class VideoSessionController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * Broadcast add to queue event, with the video id for specific session
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function videoSessionAddToQueue(Request $request): Response
     {
         $request->validate([
@@ -136,6 +184,13 @@ class VideoSessionController extends Controller
         return response()->noContent();
     }
 
+    /**
+     * Broadcast switch playlist event,
+     * with the video id for specific session
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function getVideoSessionPlayerSwitch(Request $request): Response
     {
         $request->validate([
@@ -149,11 +204,29 @@ class VideoSessionController extends Controller
         return response()->noContent();
     }
 
+    // todo: implement message loading with pagination to optimize performance
+
+    /**
+     *  Get video session live chat messages
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
     public function getVideoSessionMessages(Request $request): Collection
     {
+        $request->validate([
+            'session_id' => ['required'],
+        ]);
+
         return VideoSessionChatMessage::where('session_id', $request->session_id)->get();
     }
 
+    /**
+     * Broadcast a new live chat message for a specific session
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
     public function sendChatMessage(Request $request): Response
     {
 

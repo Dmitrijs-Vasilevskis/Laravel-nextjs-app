@@ -10,13 +10,15 @@ use App\Events\Friendship\FriendshipRequestEvent;
 
 class FriendshipController extends Controller
 {
+    /**
+     *  @var \App\Models\User
+     */
     protected $user;
 
     /**
      * Get the currently authenticated user.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return void
      */
     public function __construct(Request $request)
     {
