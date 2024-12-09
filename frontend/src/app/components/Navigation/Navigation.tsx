@@ -10,13 +10,11 @@ import {
 } from "@material-tailwind/react";
 import AuthModal from "../Auth/AuthModal";
 import { useGlobalState } from "@/app/context/globalProvider";
-import UserProfile from "../User/UserProfile";
+import UserMenu from "../User/UserMenu";
+import UserMenuMobile from "../User/UserMenuMobile";
 
 export default function Navigation() {
     const { openAuthModal, handleOpenAuthModal, user } = useGlobalState();
-
-    const [openUserMenu, setOpenUserMenu] = useState(false);
-    const handleOpenUserMenu = () => setOpenUserMenu((cur) => !cur);
 
     const [openMobileMenu, setOpenMobileMenu] = useState(false);
     const handleOpenMobileMenu = () => setOpenMobileMenu((cur) => !cur);
@@ -29,8 +27,11 @@ export default function Navigation() {
     }, []);
 
     return (
-        <Navbar color="transparent" className="mx-auto">
-            <div className="container mx-auto flex items-center justify-between dark:text-white text-blue-gray-900">
+        <Navbar
+            color="transparent"
+            className="mx-auto max-w-screen-xl py-0 px-0 md:px-8 md:py-4"
+        >
+            <div className=" px-4 md:px-0 container mx-auto flex items-center justify-between dark:text-white text-blue-gray-900">
                 <div>
                     <Typography
                         as="a"
@@ -42,7 +43,7 @@ export default function Navigation() {
                     </Typography>
                 </div>
 
-                <div className="navigation-right">
+                <div className="navigation-right invisible lg:visible">
                     {!user ? (
                         <Button
                             onClick={handleOpenAuthModal}
@@ -53,11 +54,8 @@ export default function Navigation() {
                         </Button>
                     ) : (
                         <div className="user-profile relative">
-                            <UserProfile user={user} />
+                            <UserMenu user={user} />
                         </div>
-                    )}
-                    {openAuthModal && (
-                        <AuthModal handleOpenAuthModal={handleOpenAuthModal} />
                     )}
                 </div>
                 <IconButton
@@ -84,12 +82,25 @@ export default function Navigation() {
                 </IconButton>
             </div>
             <Collapse open={openMobileMenu}>
-                <div className="mt-2 rounded-xl bg-white py-2">
-                    <Button className="mb-2" fullWidth>
-                        Sign in
-                    </Button>
+                <div className="mt-2 bg-white py-2 md:rounded-xl">
+                    {!user ? (
+                        <Button
+                            className="mb-2"
+                            fullWidth
+                            onClick={handleOpenAuthModal}
+                        >
+                            Sign in
+                        </Button>
+                    ) : (
+                        <div className="user-profile relative">
+                            <UserMenuMobile user={user} />
+                        </div>
+                    )}
                 </div>
             </Collapse>
+            {openAuthModal && (
+                <AuthModal handleOpenAuthModal={handleOpenAuthModal} />
+            )}
         </Navbar>
     );
 }

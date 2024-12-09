@@ -114,7 +114,7 @@ export default function MyProfile() {
     return (
         <MyAccountStyled className="main-wrapper">
             {/* Profile Picture section*/}
-            <div className="section-tab ">
+            <section className="section-tab ">
                 <div className="section-header">
                     <Typography variant="h3">Profile Picture</Typography>
                 </div>
@@ -155,9 +155,9 @@ export default function MyProfile() {
                         </span>
                     </div>
                 </div>
-            </div>
+            </section>
             {/* User section */}
-            <div className="section-tab">
+            <section className="section-tab">
                 <div className="section-header">
                     <Typography variant="h3">Profile Settings</Typography>
                 </div>
@@ -195,19 +195,20 @@ export default function MyProfile() {
                         />
                     </div>
                 </div>
-
-                {/*Chat setting tab */}
-                <div className="section-tab">
-                    <div className="section-header">
-                        <Typography variant="h3">
-                            Chat settings & customizations
-                        </Typography>
+            </section>
+            {/*Chat setting tab */}
+            <section className="section-tab">
+                <div className="section-header">
+                    <Typography variant="h3">
+                        Chat settings & customizations
+                    </Typography>
+                </div>
+                <div className="section-item-container">
+                    <div className="section-item-header">
+                        <span>Username color </span>
                     </div>
-                    <div className="section-item-container">
-                        <div className="section-item-header">
-                            <span>Username color </span>
-                        </div>
-                        <div className="section-item-content flex-row gap-2">
+                    <div className="section-item-content flex-row">
+                        <div className="section-item-actions gap-2">
                             <div className="flex relative grow">
                                 {isColorPickerOpen && (
                                     <NicknameColorInput
@@ -232,24 +233,27 @@ export default function MyProfile() {
                                     {paletteIcon}
                                 </button>
                             </div>
-
-                            <div className="section-item-actions">
-                                <Button
-                                    onClick={handleUpdateNicknameColor}
-                                    className="btn-primary flex-shrink-0"
-                                >
-                                    <span>Update Chat Nickname Color</span>
-                                </Button>
-                            </div>
+                            <Button
+                                onClick={handleUpdateNicknameColor}
+                                className="btn-primary flex-shrink-0"
+                            >
+                                <span>Update Chat Nickname Color</span>
+                            </Button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </MyAccountStyled>
     );
 }
 
 const MyAccountStyled = styled.div`
+    @media (max-width: 767px) {
+        .section-item-actions {
+            flex-direction: column;
+        }
+    }
+    
     .main-wrapper {
         width: 100%;
     }
@@ -273,6 +277,7 @@ const MyAccountStyled = styled.div`
 
     .section-item-actions {
         display: flex;
+        width: 100%;
     }
 
     .section-input {
@@ -289,8 +294,6 @@ const MyAccountStyled = styled.div`
         text-align: center;
         border: 1px solid black;
         border-radius: 9999px;
-        // display: flex;
-        // justify-content: center;
     }
 
     .section-item-header {

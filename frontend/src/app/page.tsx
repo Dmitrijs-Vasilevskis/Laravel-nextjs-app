@@ -25,7 +25,7 @@ export default function Home() {
                 <div className="header">
                     <h1 className="header-title">
                         <span>Watch Videos</span>
-                        <span>Together with Friends</span>
+                        <span>With Friends Together</span>
                     </h1>
                     <h3 className="header-secondary-content">
                         Synced Video Rooms with Live Chat
@@ -60,12 +60,8 @@ export default function Home() {
 }
 
 const HomePageStyled = styled.div`
-  min-height: 500px;
-
   .main-logo {
-    min-width: 200px;
-    height: auto;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 4 / 3;
     justify-items: center;
   }
 
@@ -89,6 +85,8 @@ const HomePageStyled = styled.div`
     padding: 0 20px;
     line-height: 30px;
     letter-spacing: .5px;
+    text-align: center;
+    margin-bottom: 1rem;
 
     .header-title {
       font-size: 2rem;

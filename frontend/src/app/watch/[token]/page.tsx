@@ -419,7 +419,7 @@ export default function page() {
                     )}
                 </div>
             </div>
-            <div className="flex flex-row justify-center mb-4 w-full">
+            <div className="main-content">
                 <div className="player-container">
                     <div id="player"></div>
                 </div>
@@ -459,6 +459,25 @@ export default function page() {
 
 const Styled = styled.div`
     flex-direction: column;
+
+    @media (max-width: 1023px) {
+        .main-content {
+            flex-direction: column;
+        }
+    }
+
+    @media (min-width: 1023px) {
+        .main-content {
+            flex-direction: row;
+        }
+    }
+
+    .main-content {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1rem;
+        width: 100%;
+    }
 
     .container-header {
         margin: 1rem 0;
