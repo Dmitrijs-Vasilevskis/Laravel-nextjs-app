@@ -43,12 +43,3 @@ This project is a real-time web application built with **Laravel** (backend) and
 - **Laravel Reverb**
   - Implements WebSocket protocol for real-time synchronization and messaging.
 
----
-
-## Installation
-
-### Backend (Laravel)
-1. Clone the repository and navigate to the backend directory.
-2. Install dependencies:
-   ```bash
-   composer install
