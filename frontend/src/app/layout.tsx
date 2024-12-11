@@ -4,6 +4,7 @@ import "./globals.css";
 import ContextProvider from "./providers/ContextProvider";
 import Navigation from "./components/Navigation/Navigation";
 import Footer from "./components/Footer/Footer";
+import MiniFriendChat from "./components/PathBased/MiniFriendChat";
 
 const geistSans = localFont({
     src: "./fonts/GeistVF.woff",
@@ -36,12 +37,6 @@ export default function RootLayout({
                     crossOrigin="anonymous"
                     referrerPolicy="no-referrer"
                 />
-                {/* <!-- from node_modules --> */}
-                <script
-                    async
-                    src="node_modules/@material-tailwind/html/scripts/ripple.js"
-                ></script>
-
                 {/* <!-- from cdn --> */}
                 <script
                     async
@@ -54,6 +49,7 @@ export default function RootLayout({
                 <ContextProvider>
                     <div className="root">
                         <Navigation />
+                        <MiniFriendChat />
                         {children}
                         <Footer />
                     </div>

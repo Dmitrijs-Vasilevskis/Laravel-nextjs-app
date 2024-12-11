@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import Picker, { EmojiClickData } from "emoji-picker-react";
-import { emoji } from "@/app/utils/icons";
+import { emoji, arrowLeft } from "@/app/utils/icons";
 import { FriendInterface } from "@/types/User/Firendship";
 import { DirectMessageInterface } from "@/types/DirectMessage/DirectMessage";
 import { useGlobalState } from "@/app/context/globalProvider";
@@ -12,10 +12,11 @@ import ChatMessage from "./ChatMessage";
 interface Props {
     selectedChat: FriendInterface | null;
     messages: DirectMessageInterface[];
-    setMessages: React.Dispatch<React.SetStateAction<DirectMessageInterface[]>>;
+    setMessages?: React.Dispatch<React.SetStateAction<DirectMessageInterface[]>>;
     handleReadMessageRequest: (message_id: number, sender_id: number) => void;
     chatBoxRef: React.RefObject<HTMLDivElement>;
     handleSendDirectMessage: (message: string) => void;
+    handleCloseChatBox?: () => void;
 }
 
 export default function Chatbox({
@@ -25,6 +26,7 @@ export default function Chatbox({
     setMessages,
     chatBoxRef,
     handleSendDirectMessage,
+    handleCloseChatBox,
 }: Props) {
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const [message, setMessage] = useState<string>("");
@@ -137,8 +139,18 @@ export default function Chatbox({
     return (
         <ChatboxStyled>
             {selectedChat ? (
-                <div className="chat-container">
+                <div
+                    className={`chat-container ${
+                        selectedChat ? "show" : "hide"
+                    }`}
+                >
                     <div className="chat-header-container">
+                        <span
+                            className="chat-close-icon"
+                            onClick={handleCloseChatBox}
+                        >
+                            {arrowLeft}
+                        </span>
                         <img
                             className="user-avatar"
                             src={selectedChat.data.profile_picture_url}
@@ -221,12 +233,21 @@ const ChatboxStyled = styled.section`
         flex-direction: column;
 
         .chat-header-container {
+            position: relative;
             padding: 20px;
             border-bottom: 1px solid #ddd;
             background-color: #ffffff;
             display: flex;
             align-items: center;
             gap: 1rem;
+
+            .chat-close-icon {
+                cursor: pointer;
+                position: absolute;
+                right: 0;
+                top: 0;
+                transform: translate3d(-15px, 15px, 15px);
+            }
 
             .user-avatar {
                 width: 40px;

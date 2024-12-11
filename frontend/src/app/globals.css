@@ -31,6 +31,7 @@ iframe {
 }
 
 .root {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -123,7 +124,7 @@ iframe {
 @media (max-width: 767px) {
   .main-container {
     padding: 1rem;
-    max-width: 100%;
+    width: 100%;
     border-radius: 0;
     flex-direction: column;
   }
@@ -138,4 +139,12 @@ iframe {
   .text-balance {
     text-wrap: balance;
   }
+}
+
+.scroll {
+  overflow: auto;
+}
+
+.scroll::-webkit-scrollbar {
+  width: 0px;
 }
