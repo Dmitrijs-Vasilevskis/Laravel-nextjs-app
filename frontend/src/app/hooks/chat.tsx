@@ -21,7 +21,7 @@ export const useChat = () => {
     };
 
     const fetchMessages = () => {
-        if (!selectedChat || !chatBoxRef.current) return;
+        if (!selectedChat?.chat || !chatBoxRef.current) return;
 
         setLoadingMore(true);
 
@@ -32,6 +32,7 @@ export const useChat = () => {
 
         axios
             .post("api/get-direct-messages", {
+                chat_id: selectedChat.chat.id,
                 friend_id: selectedChat.data.id,
                 page: page,
                 limit: 40,
@@ -73,11 +74,12 @@ export const useChat = () => {
     };
 
     const handleSendDirectMessage = (message: string) => {
-        if (!selectedChat || !message) return;
+        if (!selectedChat?.chat || !message) return;
 
         axios
             .post("api/send-direct-message", {
                 receiver_id: selectedChat.data.id,
+                chat_id: selectedChat.chat.id,
                 message: message,
             })
             .then((response: { data: DirectMessageInterface }) => {
@@ -118,6 +120,11 @@ export const useChat = () => {
 
             if (message_id && sender_id) {
                 handleIsMessageRead(message_id);
+
+                return {
+                    message_id: message_id,
+                    sender_id: sender_id,
+                };
             }
         } catch (error) {
             console.log(error);

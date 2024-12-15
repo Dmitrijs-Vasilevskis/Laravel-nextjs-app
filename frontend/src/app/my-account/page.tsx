@@ -10,7 +10,7 @@ import { useAuth } from "../hooks/auth";
 import Link from "next/link";
 import MyFriends from "../components/MyAccount/Tabs/Friends/MyFriends";
 
-export default function page() {
+export default function MyAccountPage() {
     const { user } = useAuth({
         middleware: "auth",
         redirectIfAuthenticated: "/",

@@ -32,8 +32,6 @@ class FriendshipRequestEvent implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        Log::info("Broadcasting on notifications.{$this->receiverId} channel");
-
         return [
             new PrivateChannel('notifications.' . $this->receiverId),
         ];

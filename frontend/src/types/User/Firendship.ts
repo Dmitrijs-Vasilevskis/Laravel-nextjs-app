@@ -2,13 +2,15 @@ import { UserInterface } from "./User";
 
 export interface FriendInterface {
     data: UserInterface
-    chatPreview?: FriendChatPreviewInterface
+    chat?: FriendChatPreviewInterface
 }
 
 export interface FriendChatPreviewInterface {
+    id: number;
+    chatType: string;
     latestMessage: string;
     sentTime: string;
-    unread: number;
+    unreadCount: number;
 }
 
 export interface FriendPendingInterface {

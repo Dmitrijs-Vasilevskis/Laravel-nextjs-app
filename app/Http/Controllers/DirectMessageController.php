@@ -35,13 +35,15 @@ class DirectMessageController extends Controller
     {
         $request->validate([
             'receiver_id' => 'required|exists:users,id',
-            'message' => 'required|string|max:255'
+            'message' => 'required|string|max:255',
+            'chat_id' => 'required|exists:chats,id'
         ]);
 
         $message = DirectMessage::create([
             'sender_id' => $this->user->id,
             'receiver_id' => $request->receiver_id,
-            'message' => $request->message
+            'message' => $request->message,
+            'chat_id' => $request->chat_id
         ]);
 
 
@@ -63,19 +65,17 @@ class DirectMessageController extends Controller
     {
         $request->validate([
             'friend_id' => 'required|exists:users,id',
+            'chat_id' => 'required|exists:chats,id',
             'page' => 'integer',
             'limit' => 'integer'
         ]);
 
-        $userId = $this->user->id;
-        $friendId = $request->friend_id;
+        $chatId = $request->chat_id;
         $page = $request->page ?? 1;
         $limit = $request->limit ?? 40;
 
-        $messageCollection = DirectMessage::where(function ($query) use ($userId, $friendId) {
-            $query->where('sender_id', $userId)->where('receiver_id', $friendId);
-        })->orWhere(function ($query) use ($userId, $friendId) {
-            $query->where('sender_id', $friendId)->where('receiver_id', $userId);
+        $messageCollection = DirectMessage::where(function ($query) use ($chatId) {
+            $query->where('chat_id', $chatId);
         })->orderBy('created_at', 'desc')
             ->skip(($page - 1) * $limit)
             ->take($limit)

@@ -12,6 +12,7 @@ import FriendBar from "@/app/components/DirectMessages/FriendBar";
 import { useEcho } from "@/app/hooks/echo";
 import { DirectMessageInterface } from "@/types/DirectMessage/DirectMessage";
 import { useChat } from "@/app/hooks/chat";
+import toast from 'react-hot-toast';
 
 export default function MyFriends() {
     const {
@@ -20,6 +21,8 @@ export default function MyFriends() {
         friendList,
         setFriendList,
         handleUnreadCount,
+        handleFetchPending,
+        handleFetchFriends,
     } = useGlobalState();
     const echo = useEcho();
 
@@ -35,11 +38,21 @@ export default function MyFriends() {
     } = useChat();
 
     const handlePendingAccept = async (sender_id: number) => {
-        const response = await acceptFriendRequest(sender_id);
+        acceptFriendRequest(sender_id).then(() => {
+            handleFetchPending();
+            handleFetchFriends();
+        }).catch((error: any) => {
+            toast.error(error.message);
+        });
     };
 
     const handlePendingDecline = async (sender_id: number) => {
-        const response = await declineFriendRequest(sender_id);
+        declineFriendRequest(sender_id).then(() => {
+            handleFetchPending();
+            handleFetchFriends();
+        }).catch((error: any) => {
+            toast.error(error.message);
+        });
     };
 
     const handleAddNewMessages = (message: DirectMessageInterface) => {
@@ -62,6 +75,15 @@ export default function MyFriends() {
 
     const handleReadMessage = (messageId: number, senderId: number) => {
         handleIsMessageRead(messageId);
+    };
+
+    const handleReadMessageEvent = async (
+        messageId: number,
+        senderId: number
+    ) => {
+        handleReadMessageRequest(messageId, senderId).then(() => {
+            handleUnreadCount(messageId, senderId);
+        });
     };
 
     useEffect(() => {
@@ -102,7 +124,7 @@ export default function MyFriends() {
             <Chatbox
                 selectedChat={selectedChat}
                 messages={messages}
-                handleReadMessageRequest={handleReadMessageRequest}
+                handleReadMessageRequest={handleReadMessageEvent}
                 handleSendDirectMessage={handleSendDirectMessage}
                 chatBoxRef={chatBoxRef}
                 handleCloseChatBox={handleCloseChatBox}

@@ -89,19 +89,19 @@ export default function FriendBar({
                                         {friend.data.name}
                                     </p>
                                     <p className="chat-latest-message">
-                                        {friend.chatPreview?.latestMessage}
+                                        {friend.chat?.latestMessage}
                                     </p>
                                 </div>
                                 <div className="user-chat-notifications">
                                     <p className="chat-latest-message-time">
-                                        {friend.chatPreview?.sentTime &&
+                                        {friend.chat?.sentTime &&
                                             formatTimeHourMinutes(
-                                                friend.chatPreview?.sentTime
+                                                friend.chat?.sentTime
                                             )}
                                     </p>
-                                    {!!friend.chatPreview?.unread && (
+                                    {!!friend.chat?.unreadCount && (
                                         <div className="chat-user-unread">
-                                            {friend.chatPreview?.unread}
+                                            {friend.chat?.unreadCount}
                                         </div>
                                     )}
                                 </div>

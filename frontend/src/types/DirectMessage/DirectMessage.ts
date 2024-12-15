@@ -6,4 +6,5 @@ export interface DirectMessageInterface {
     receiver_id: number;
     sender_id: number;
     created_at: string;
+    chat_id: number;
 }

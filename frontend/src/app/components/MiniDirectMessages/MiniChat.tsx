@@ -2,7 +2,7 @@
 
 import styled from "styled-components";
 import MessageIconSvg from "@/assets/icons/message-icon.svg";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MiniChatbox from "./MiniChatbox";
 import { useGlobalState } from "@/app/context/globalProvider";
 import { FriendInterface } from "@/types/User/Firendship";
@@ -13,7 +13,7 @@ export default function MiniChat() {
 
     const hasUnreadMessages = useMemo(() => {
         return friendList.some((friend: FriendInterface) => {
-            return !!friend.chatPreview?.unread;
+            return !!friend.chat?.unreadCount;
         });
     }, [friendList]);
 

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\DirectMessage;
-use Illuminate\Http\Request;
 use App\Models\Friendship;
+use App\Models\Chat;
+use App\Models\Participant;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Events\Friendship\FriendshipRequestEvent;
 
@@ -102,8 +104,23 @@ class FriendshipController extends Controller
         ->with('sender')
         ->first();
 
-        Log::debug($request->sender_id);
+        // Check if a chat already exists between the users
+        $existingChat = Chat::whereHas('participants', function ($query) use ($friendship) {
+            $query->where('user_id', $friendship->user_id);
+        })->whereHas('participants', function ($query) use ($friendship) {
+            $query->where('user_id', $friendship->friend_id);
+        })->first();
 
+        if (!$existingChat) {
+            $chat = Chat::create();
+            $chat->participants()->createMany([
+                ['user_id' => $friendship->receiver_id],
+                ['user_id' => $friendship->sender_id],
+            ]);
+        } else {
+            $chat = $existingChat;
+        }
+        
         broadcast(new FriendshipRequestEvent(
             $request->sender_id,
             $friendship->status,
@@ -176,34 +193,12 @@ class FriendshipController extends Controller
     }
 
     /**
-     * Fetches the list of friends for the authenticated user.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function fetchFriendList()
-    {
-        $userId = $this->user->id;
-
-        $friends = Friendship::where(function ($query) use ($userId) {
-            $query->where('sender_id', $userId)->where('status', 'accepted');
-        })->orWhere(function ($query) use ($userId) {
-            $query->where('receiver_id', $userId)->where('status', 'accepted');
-        })->get();
-
-        $friendList = $friends->map(function ($friendship) use ($userId) {
-            return $friendship->sender_id === $userId ? $friendship->receiver_id : $friendship->sender_id;
-        });
-
-        return response()->json($friendList);
-    }
-
-    /**
      * Fetches the list of friends for the authenticated user, including their
      * latest message and count of unread messages.
      *
      * @return \Illuminate\Http\JsonResponse
      */
-    public function fetchFriends()
+    public function fetchFriendList()
     {
         $userId = $this->user->id;
 
@@ -218,18 +213,20 @@ class FriendshipController extends Controller
             // Determine the friend based on the user being the sender or receiver
             $friend = $friendship->sender_id === $userId ? $friendship->receiver : $friendship->sender;
 
-            // Fetch the latest message between the user and the friend
-            $latestMessage = DirectMessage::where(function ($query) use ($userId, $friend) {
-                $query->where('sender_id', $userId)->where('receiver_id', $friend->id)
-                    ->orWhere('sender_id', $friend->id)->where('receiver_id', $userId);
-            })
-            ->orderBy('created_at', 'desc')
-            ->first();
+
+            $chat = Chat::whereHas('participants', function ($query) use ($userId, $friend) {
+                $query->where('user_id', $userId);
+            })->whereHas('participants', function ($query) use ($friend) {
+                $query->where('user_id', $friend->id);
+            })->first();
+
+            $latestMessage = DirectMessage::where('chat_id', $chat->id)->latest()->first();
 
             // Count unread messages from the friend to the user
             $unreadCount = DirectMessage::where('receiver_id', $userId)
             ->where('sender_id', $friend->id)
             ->where('is_read', false)
+            ->where('chat_id', $chat->id)
             ->count();
 
             return [
@@ -240,12 +237,13 @@ class FriendshipController extends Controller
                     'profile_picture_url' => $friend->profile_picture_url,
                     'chat_name_color' => $friend->chat_name_color,
                 ],
-                'chatPreview' => [
+                'chat' => [
+                    'id' => $chat->id,
+                    'chatType' => $chat->chat_type,
                     'latestMessage' => $latestMessage ? $latestMessage->message : null,
                     'sentTime' => $latestMessage ? $latestMessage->created_at->toDateTimeString() : null,
-                    'unread' => $unreadCount,
-                ],
-                ];
+                    'unreadCount' => $unreadCount
+                ]];
             });
 
         return response()->json(['friendList' => $friendList], 200);

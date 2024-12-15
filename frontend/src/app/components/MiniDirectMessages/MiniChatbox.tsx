@@ -20,6 +20,15 @@ export default function MiniChatbox() {
         handleCloseChatBox,
     } = useChat();
 
+    const handleReadMessageEvent = async (
+        messageId: number,
+        senderId: number
+    ) => {
+        handleReadMessageRequest(messageId, senderId).then(() => {
+            handleUnreadCount(messageId, senderId);
+        });
+    };
+
     return (
         <MiniChatBoxStyled theme={theme} className="flex flex-row h-full">
             <ul className="border-r scroll">
@@ -33,6 +42,9 @@ export default function MiniChatbox() {
                         }`}
                     >
                         <div className="user-avatar-container">
+                            {!!friend.chat?.unreadCount && (
+                                <span className="unread"></span>
+                            )}
                             <img
                                 className="user-avatar"
                                 src={friend.data.profile_picture_url}
@@ -46,7 +58,7 @@ export default function MiniChatbox() {
                 <Chatbox
                     selectedChat={selectedChat}
                     messages={messages}
-                    handleReadMessageRequest={handleReadMessageRequest}
+                    handleReadMessageRequest={handleReadMessageEvent}
                     handleSendDirectMessage={handleSendDirectMessage}
                     chatBoxRef={chatBoxRef}
                     handleCloseChatBox={handleCloseChatBox}
@@ -64,6 +76,7 @@ const MiniChatBoxStyled = styled.div`
     }
 
     .user-avatar-container {
+        position: relative;
         max-width: 40px;
         max-height: 40px;
         width: 100%;
@@ -71,6 +84,20 @@ const MiniChatBoxStyled = styled.div`
         background-color: #ddd;
         border-radius: 50%;
         margin: 0 10px;
+
+        .unread {
+            background-color: #f00;
+            color: #fff;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            position: absolute;
+            transform: translate3d(30px, 0, 0);
+        }
     }
 
     .friend-list {
@@ -127,37 +154,6 @@ const MiniChatBoxStyled = styled.div`
             justify-content: center;
             align-items: center;
             font-size: 12px;
-        }
-    }
-
-    .slide-out-bl {
-        -webkit-animation: slide-out-bl 0.5s
-            cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
-        animation: slide-out-bl 0.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) both;
-    }
-
-    @-webkit-keyframes slide-out-bl {
-        0% {
-            -webkit-transform: translateY(0) translateX(0);
-            transform: translateY(0) translateX(0);
-            opacity: 1;
-        }
-        100% {
-            -webkit-transform: translateY(1000px) translateX(-1000px);
-            transform: translateY(1000px) translateX(-1000px);
-            opacity: 0;
-        }
-    }
-    @keyframes slide-out-bl {
-        0% {
-            -webkit-transform: translateY(0) translateX(0);
-            transform: translateY(0) translateX(0);
-            opacity: 1;
-        }
-        100% {
-            -webkit-transform: translateY(1000px) translateX(-1000px);
-            transform: translateY(1000px) translateX(-1000px);
-            opacity: 0;
         }
     }
 `;
