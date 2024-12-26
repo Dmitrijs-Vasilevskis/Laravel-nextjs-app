@@ -4,9 +4,10 @@ import { useAuth } from "@/app/hooks/auth";
 import React, { useState } from "react";
 import { Button, Input } from "@material-tailwind/react";
 import toast from "react-hot-toast";
+import { AuthFormType } from "@/types/Auth/Auth";
 
 interface Props {
-  handleFormType: (newFormType: string) => void;
+  handleFormType: (newFormType: AuthFormType) => void;
 }
 
 export default function ForgotPasswordForm({ handleFormType }: Props) {

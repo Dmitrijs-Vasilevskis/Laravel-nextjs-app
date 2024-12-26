@@ -3,41 +3,58 @@
 import LoginForm from "./LoginForm";
 import RegistrationForm from "./RegistrationForm";
 import ForgotPasswordForm from "./ForgotPasswordForm";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import styled from "styled-components";
+import { AuthFormType } from "@/types/Auth/Auth";
 
 interface Props {
-  handleOpenAuthModal: () => void;
+    handleOpenAuthModal: () => void;
+    preselectedFormType: AuthFormType | null;
 }
 
-export default function AuthModal({ handleOpenAuthModal }: Props) {
-  const [formType, setFormType] = useState("login");
+export default function AuthModal({
+    handleOpenAuthModal,
+    preselectedFormType,
+}: Props) {
+    const [formType, setFormType] = useState<AuthFormType>("login");
 
-  const handleFormType = (newFormType: string) => {
-    setFormType(newFormType);
-  };
+    useMemo(() => {
+        if (preselectedFormType) {
+            setFormType(preselectedFormType);
+        }
+    }, [preselectedFormType]);
 
-  const renderForm = () => {
-    switch (formType) {
-      case "login":
-        return <LoginForm handleFormType={handleFormType} />;
-      case "register":
-        return <RegistrationForm handleFormType={handleFormType} />;
-      case "forgotPassword":
-        return <ForgotPasswordForm handleFormType={handleFormType} />;
-      default:
-        return <LoginForm handleFormType={handleFormType} />;
-    }
-  };
+    const handleFormType = (newFormType: AuthFormType) => {
+        setFormType(newFormType);
+    };
 
-  return (
-    <ModalStyled>
-      <div className="modal-overlay" onClick={handleOpenAuthModal}></div>
-      <div className="absolute -ml-40 -mt-40 w-80 h-auto p-4 left-1/2 top-1/2 border border-gray-600 rounded-lg bg-gray-700">
-        {renderForm()}
-      </div>
-    </ModalStyled>
-  );
+    const renderForm = () => {
+        switch (formType) {
+            case "login":
+                return <LoginForm handleFormType={handleFormType} />;
+            case "register":
+                return <RegistrationForm handleFormType={handleFormType} />;
+            case "forgotPassword":
+                return <ForgotPasswordForm handleFormType={handleFormType} />;
+            default:
+                return <LoginForm handleFormType={handleFormType} />;
+        }
+    };
+
+    const formComponents: Record<AuthFormType, JSX.Element> = {
+        login: <LoginForm handleFormType={handleFormType} />,
+        register: <RegistrationForm handleFormType={handleFormType} />,
+        forgotPassword: <ForgotPasswordForm handleFormType={handleFormType} />,
+    };
+
+    return (
+        <ModalStyled>
+            <div className="modal-overlay" onClick={handleOpenAuthModal}></div>
+            <div className="absolute -ml-40 -mt-40 w-80 h-auto p-4 left-1/2 top-1/2 border border-gray-600 rounded-lg bg-gray-700">
+                {formComponents[formType]}
+            </div>
+        </ModalStyled>
+    );
 }
 
 const ModalStyled = styled.div`

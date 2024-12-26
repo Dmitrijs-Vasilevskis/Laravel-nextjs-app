@@ -12,10 +12,12 @@ import AuthModal from "../Auth/AuthModal";
 import { useGlobalState } from "@/app/context/globalProvider";
 import UserMenu from "../User/UserMenu";
 import UserMenuMobile from "../User/UserMenuMobile";
+import { AuthFormType } from "@/types/Auth/Auth";
 
 export default function Navigation() {
     const { openAuthModal, handleOpenAuthModal, user } = useGlobalState();
-
+    const [preselectedFormType, setPreselectedFormType] =
+        useState<AuthFormType | null>(null);
     const [openMobileMenu, setOpenMobileMenu] = useState(false);
     const handleOpenMobileMenu = () => setOpenMobileMenu((cur) => !cur);
 
@@ -46,7 +48,10 @@ export default function Navigation() {
                 <div className="navigation-right invisible lg:visible">
                     {!user ? (
                         <Button
-                            onClick={handleOpenAuthModal}
+                            onClick={() => {
+                                setPreselectedFormType("login");
+                                handleOpenAuthModal();
+                            }}
                             color="gray"
                             className="hidden lg:inline-block"
                         >
@@ -84,13 +89,28 @@ export default function Navigation() {
             <Collapse open={openMobileMenu}>
                 <div className="mt-2 bg-white py-2 md:rounded-xl">
                     {!user ? (
-                        <Button
-                            className="mb-2"
-                            fullWidth
-                            onClick={handleOpenAuthModal}
-                        >
-                            Sign in
-                        </Button>
+                        <>
+                            <Button
+                                className="mb-2"
+                                fullWidth
+                                onClick={() => {
+                                    setPreselectedFormType("login");
+                                    handleOpenAuthModal();
+                                }}
+                            >
+                                Sign in
+                            </Button>
+                            <Button
+                                className="mb-2"
+                                fullWidth
+                                onClick={() => {
+                                    setPreselectedFormType("register");
+                                    handleOpenAuthModal();
+                                }}
+                            >
+                                Sign up
+                            </Button>
+                        </>
                     ) : (
                         <div className="user-profile relative">
                             <UserMenuMobile user={user} />
@@ -99,7 +119,10 @@ export default function Navigation() {
                 </div>
             </Collapse>
             {openAuthModal && (
-                <AuthModal handleOpenAuthModal={handleOpenAuthModal} />
+                <AuthModal
+                    preselectedFormType={preselectedFormType}
+                    handleOpenAuthModal={handleOpenAuthModal}
+                />
             )}
         </Navbar>
     );

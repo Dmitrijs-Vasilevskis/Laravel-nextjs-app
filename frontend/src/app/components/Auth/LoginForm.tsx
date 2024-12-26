@@ -5,9 +5,10 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "@/app/hooks/auth";
 import { useGlobalState } from "@/app/context/globalProvider";
+import { AuthFormType } from "@/types/Auth/Auth";
 
 interface Props {
-  handleFormType: (newFormType: string) => void;
+  handleFormType: (newFormType: AuthFormType) => void;
 }
 
 interface FormData {
@@ -94,6 +95,7 @@ export default function LoginForm({ handleFormType }: Props) {
                         color="white"
                         type="password"
                         placeholder="Password"
+                        autoComplete="off"
                         name="password"
                         id="password"
                         onChange={handleChange}
